@@ -1,0 +1,12 @@
+{
+  "name": "elianbus",
+  "version": "1.0.0",
+  "description": "Local message hub: every app talks through one point, everything is logged, selected topics push to the phone via ntfy.",
+  "main": "hub.js",
+  "scripts": {
+    "start": "node hub.js"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}

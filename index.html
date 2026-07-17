@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ElianBus</title>
+<style>
+  :root{--bg:#0a1118;--panel:#0f1820;--panel2:#0c141c;--line:#1d2a36;--ink:#dbe7f0;--dim:#8fa3b3;
+        --faint:#5c7183;--accent:#4fd6c9;--accent2:#6ea8ff;--warn:#ffb454;--bad:#ff6b8a;--good:#57d97e;
+        --mono:"SF Mono",ui-monospace,Menlo,monospace;--sans:-apple-system,"Inter",sans-serif}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);padding:26px 22px 60px}
+  h1{font-size:22px;margin:0}
+  h1 .dot{color:var(--accent)}
+  .sub{color:var(--faint);font-size:12.5px;margin-top:4px;font-family:var(--mono)}
+  header{display:flex;justify-content:space-between;align-items:flex-start;max-width:980px;margin:0 auto 18px}
+  .pill{font-family:var(--mono);font-size:11px;border:1px solid var(--line);background:var(--panel2);
+        border-radius:20px;padding:6px 12px;color:var(--faint)}
+  .wrap{max-width:980px;margin:0 auto;display:grid;gap:16px}
+  .card{border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:16px 18px}
+  .card h2{font-size:13px;margin:0 0 12px;font-family:var(--mono);letter-spacing:.06em;
+           text-transform:uppercase;color:var(--accent)}
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+  label.lbl{font-size:12.5px;color:var(--dim);min-width:64px}
+  input[type=text]{font-family:var(--mono);font-size:12.5px;background:#0a1219;border:1px solid var(--line);
+        color:var(--ink);border-radius:8px;padding:8px 10px;outline:none;flex:1;min-width:180px}
+  input[type=text]:focus{border-color:var(--accent)}
+  button{font-family:var(--sans);font-size:12.5px;background:#16222e;border:1px solid var(--line);
+        color:var(--ink);border-radius:8px;padding:8px 14px;cursor:pointer}
+  button:hover{border-color:var(--accent2)}
+  .switch{position:relative;width:40px;height:22px;flex:none}
+  .switch input{display:none}
+  .slider{position:absolute;inset:0;background:#22303d;border-radius:22px;transition:.2s;cursor:pointer}
+  .slider:before{content:"";position:absolute;width:16px;height:16px;left:3px;top:3px;background:#8fa3b3;
+        border-radius:50%;transition:.2s}
+  .switch input:checked + .slider{background:var(--accent)}
+  .switch input:checked + .slider:before{transform:translateX(18px);background:#062a26}
+  .hint{font-size:12px;color:var(--faint);line-height:1.5}
+  .hint a{color:var(--accent2)}
+  .hint code{color:var(--accent);background:#0a1219;padding:1px 5px;border-radius:5px}
+  .topic{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:12.5px;
+         padding:7px 0;border-top:1px solid var(--line)}
+  .topic:first-of-type{border-top:none}
+  .topic .tname{flex:1;color:var(--ink)}
+  .topic .cnt{color:var(--faint);font-size:11px}
+  .topic label{display:flex;gap:6px;align-items:center;color:var(--dim);font-size:12px;cursor:pointer;font-family:var(--sans)}
+  .topic input{width:15px;height:15px;accent-color:var(--accent);cursor:pointer}
+  #feed{font-family:var(--mono);font-size:11.5px;max-height:420px;overflow-y:auto;display:flex;
+        flex-direction:column-reverse;gap:2px;background:#0a1219;border:1px solid var(--line);
+        border-radius:8px;padding:10px}
+  .msg{display:flex;gap:10px;padding:3px 0;border-bottom:1px solid rgba(29,42,54,.5);align-items:baseline}
+  .msg .ts{color:var(--faint);flex:none}
+  .msg .from{color:var(--accent2);flex:none;min-width:110px}
+  .msg .tp{color:var(--accent);flex:none;min-width:140px}
+  .msg .dt{color:var(--dim);word-break:break-all}
+  .ok{color:var(--good)} .err{color:var(--bad)}
+  textarea{font-family:var(--mono);font-size:12px;background:#0a1219;border:1px solid var(--line);
+        color:var(--ink);border-radius:8px;padding:8px 10px;outline:none;width:100%;min-height:54px;resize:vertical}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>ElianBus<span class="dot">.</span></h1>
+    <div class="sub">one hub · everything logged · localhost:9900</div>
+  </div>
+  <span style="display:flex;gap:8px;align-items:center">
+    <a class="pill" href="/manual" style="text-decoration:none">📖 manual</a>
+    <span class="pill" id="conn">● connecting…</span>
+  </span>
+</header>
+
+<div class="wrap">
+
+  <div class="card">
+    <h2>📲 Phone push (ntfy)</h2>
+    <div class="row">
+      <label class="switch"><input type="checkbox" id="pEnabled" onchange="saveNtfy()"><span class="slider"></span></label>
+      <span class="hint">Forward the checked topics below to my phone</span>
+      <span style="flex:1"></span>
+      <button onclick="testPush()" id="testbtn">Send test</button>
+    </div>
+    <div class="row"><label class="lbl">topic</label>
+      <input type="text" id="pTopic" placeholder="secret topic name" onchange="saveNtfy()">
+      <button onclick="genTopic()" title="Generate a long random topic — the name IS the secret">Generate</button>
+    </div>
+    <div class="row"><label class="lbl">server</label>
+      <input type="text" id="pServer" value="https://ntfy.sh" onchange="saveNtfy()">
+    </div>
+    <div class="hint" id="setupHint"></div>
+  </div>
+
+  <div class="card">
+    <h2>Topics — tick what reaches your phone</h2>
+    <div id="topics" class="hint">no topics seen yet — publish something</div>
+  </div>
+
+  <div class="card">
+    <h2>Live feed</h2>
+    <div id="feed"></div>
+  </div>
+
+  <div class="card">
+    <h2>Inject a message (as “human”)</h2>
+    <div class="row"><label class="lbl">topic</label><input type="text" id="iTopic" placeholder="test/ping"></div>
+    <div class="row" style="align-items:flex-start"><label class="lbl">data</label>
+      <textarea id="iData" placeholder='{"msg":"hello"} — or plain text'></textarea></div>
+    <div class="row"><button onclick="inject()">Publish</button><span class="hint" id="iRes"></span></div>
+  </div>
+
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+let CFG={ntfy:{enabled:false,server:"https://ntfy.sh",topic:""},forward:{}};
+const COUNTS={};
+
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+
+async function loadCfg(){
+  try{ CFG=await (await fetch("/config")).json(); }catch(e){}
+  $("pEnabled").checked=!!CFG.ntfy.enabled;
+  $("pTopic").value=CFG.ntfy.topic||"";
+  $("pServer").value=CFG.ntfy.server||"https://ntfy.sh";
+  renderHint();
+}
+function renderHint(){
+  const t=CFG.ntfy.topic, s=(CFG.ntfy.server||"https://ntfy.sh").replace(/\/$/,"");
+  $("setupHint").innerHTML = t
+    ? `On your phone: install the <b>ntfy</b> app → Subscribe to topic <code>${esc(t)}</code>
+       (or open <a href="${esc(s)}/${esc(t)}" target="_blank">${esc(s)}/${esc(t)}</a> in a browser to watch).
+       The topic name is the secret — don’t share it.`
+    : `Click <b>Generate</b> to create a secret topic, then subscribe to it in the ntfy app on your phone.`;
+}
+async function saveNtfy(){
+  CFG.ntfy={enabled:$("pEnabled").checked, topic:$("pTopic").value.trim(), server:$("pServer").value.trim()||"https://ntfy.sh"};
+  try{ CFG=await (await fetch("/config",{method:"POST",body:JSON.stringify({ntfy:CFG.ntfy})})).json(); }catch(e){}
+  renderHint();
+}
+function genTopic(){
+  const a="abcdefghijklmnopqrstuvwxyz0123456789", r=crypto.getRandomValues(new Uint8Array(24));
+  $("pTopic").value="elian-"+[...r].map(x=>a[x%36]).join("");
+  saveNtfy();
+}
+async function testPush(){
+  const b=$("testbtn"); b.textContent="…";
+  try{
+    const r=await fetch("/test-push",{method:"POST",body:"{}"});
+    const j=await r.json();
+    b.textContent=j.ok?"Sent ✓":"Failed"; if(!j.ok) alert(j.err||"failed");
+  }catch(e){ b.textContent="Failed"; }
+  setTimeout(()=>b.textContent="Send test",2500);
+}
+
+async function loadTopics(){
+  let list=[];
+  try{ list=await (await fetch("/topics")).json(); }catch(e){}
+  renderTopics(list);
+}
+function renderTopics(list){
+  const known=new Set(list.concat(Object.keys(CFG.forward||{})));
+  if(!known.size){ return; }
+  $("topics").innerHTML=[...known].sort().map(t=>`
+    <div class="topic">
+      <span class="tname">${esc(t)}</span>
+      <span class="cnt">${COUNTS[t]?COUNTS[t]+" msg":""}</span>
+      <label><input type="checkbox" ${CFG.forward&&CFG.forward[t]?"checked":""}
+        onchange="setForward('${esc(t)}',this.checked)">📲 phone</label>
+    </div>`).join("");
+}
+window.setForward=async function(topic,on){
+  try{ CFG=await (await fetch("/config",{method:"POST",body:JSON.stringify({forward:{[topic]:on}})})).json(); }catch(e){}
+};
+
+function addFeed(e){
+  COUNTS[e.topic]=(COUNTS[e.topic]||0)+1;
+  const d=document.createElement("div"); d.className="msg";
+  d.innerHTML=`<span class="ts">${esc((e.ts||"").replace("T"," ").slice(5,19))}</span>
+    <span class="from">${esc(e.from)}</span><span class="tp">${esc(e.topic)}</span>
+    <span class="dt">${esc(e.data&&e.data.msg?e.data.msg:JSON.stringify(e.data))}</span>`;
+  $("feed").prepend(d);
+  while($("feed").children.length>300) $("feed").lastChild.remove();
+}
+
+async function loadHistory(){
+  try{
+    const hist=await (await fetch("/replay?limit=100")).json();
+    hist.forEach(addFeed);
+  }catch(e){}
+  loadTopics();
+}
+
+let ws;
+function connect(){
+  ws=new WebSocket(`ws://${location.host}/ws`);
+  ws.onopen=()=>{ $("conn").textContent="● live"; $("conn").style.color="var(--good)";
+                  ws.send(JSON.stringify({type:"sub",topics:["#"]})); };
+  ws.onmessage=ev=>{ try{ const e=JSON.parse(ev.data); addFeed(e); loadTopics(); }catch(_){} };
+  ws.onclose=()=>{ $("conn").textContent="● reconnecting…"; $("conn").style.color="var(--warn)";
+                   setTimeout(connect,2000); };
+}
+
+window.inject=async function(){
+  const topic=$("iTopic").value.trim(); if(!topic){ $("iRes").textContent="topic required"; return; }
+  let data, raw=$("iData").value.trim();
+  try{ data=raw?JSON.parse(raw):{}; }catch(_){ data={msg:raw}; }
+  try{
+    const r=await fetch("/pub",{method:"POST",body:JSON.stringify({from:"human",topic,data})});
+    const j=await r.json();
+    $("iRes").innerHTML=j.ok?'<span class="ok">published ✓</span>':`<span class="err">${esc(j.err||"failed")}</span>`;
+  }catch(e){ $("iRes").innerHTML='<span class="err">hub unreachable</span>'; }
+  setTimeout(()=>$("iRes").textContent="",3000);
+};
+
+loadCfg().then(loadHistory);
+connect();
+</script>
+</body>
+</html>

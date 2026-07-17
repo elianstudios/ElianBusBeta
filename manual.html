@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ElianBus — The Manual</title>
+<style>
+  :root{
+    --bg:#0a1118;--panel:#0f1820;--panel2:#0c141c;--line:#1d2a36;
+    --ink:#dbe7f0;--dim:#9db1c1;--faint:#5c7183;
+    --accent:#4fd6c9;--accent2:#6ea8ff;--warn:#ffb454;--bad:#ff6b8a;--good:#57d97e;
+    --mono:"SF Mono",ui-monospace,Menlo,monospace;
+    --serif:"Iowan Old Style","Palatino",Georgia,serif;
+    --sans:-apple-system,"Inter",sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--serif);
+       font-size:16.5px;line-height:1.65}
+  .page{max-width:780px;margin:0 auto;padding:52px 26px 120px}
+
+  /* ── title block ── */
+  .titleblock{text-align:center;padding:34px 0 30px;border-bottom:1px solid var(--line);margin-bottom:8px}
+  .titleblock h1{font-family:var(--mono);font-size:40px;margin:0;letter-spacing:.02em}
+  .titleblock h1 .dot{color:var(--accent)}
+  .titleblock .subtitle{font-family:var(--serif);font-style:italic;font-size:19px;color:var(--dim);margin-top:10px}
+  .titleblock .version{font-family:var(--mono);font-size:11.5px;letter-spacing:.22em;
+       text-transform:uppercase;color:var(--faint);margin-top:16px}
+
+  /* ── table of contents ── */
+  .toc{font-family:var(--mono);font-size:13px;border:1px solid var(--line);background:var(--panel);
+       border-radius:12px;padding:20px 26px;margin:34px 0 10px}
+  .toc .toctitle{letter-spacing:.18em;text-transform:uppercase;font-size:10.5px;color:var(--accent);margin-bottom:12px}
+  .toc a{display:block;color:var(--dim);text-decoration:none;padding:3.5px 0}
+  .toc a:hover{color:var(--accent)}
+  .toc a .n{color:var(--faint);display:inline-block;width:30px}
+
+  /* ── chapters ── */
+  h2{font-family:var(--mono);font-size:21px;margin:64px 0 6px;padding-top:26px;
+     border-top:1px solid var(--line);letter-spacing:.01em}
+  h2 .ch{display:block;font-size:10.5px;letter-spacing:.24em;text-transform:uppercase;
+     color:var(--accent);margin-bottom:10px}
+  h3{font-family:var(--mono);font-size:15px;color:var(--accent2);margin:34px 0 8px;letter-spacing:.02em}
+  p{margin:14px 0;color:var(--ink)}
+  .lead{font-size:18px;color:var(--dim);font-style:italic}
+  strong{color:#fff}
+  em{color:var(--dim)}
+  ul,ol{margin:12px 0;padding-left:26px}
+  li{margin:7px 0}
+  a{color:var(--accent2)}
+
+  /* ── code ── */
+  code{font-family:var(--mono);font-size:.82em;background:var(--panel2);border:1px solid var(--line);
+       border-radius:5px;padding:1.5px 6px;color:var(--accent)}
+  pre{font-family:var(--mono);font-size:12.5px;line-height:1.6;background:var(--panel2);
+      border:1px solid var(--line);border-radius:10px;padding:16px 18px;overflow-x:auto;color:var(--ink)}
+  pre code{background:none;border:none;padding:0;color:inherit}
+  pre .c{color:var(--faint)}          /* comment */
+  pre .k{color:var(--accent)}        /* keyword-ish */
+  .diagram{color:var(--dim);font-size:12px}
+
+  /* ── tables ── */
+  table{border-collapse:collapse;width:100%;margin:16px 0;font-size:14px}
+  th{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;
+     color:var(--accent);text-align:left;padding:9px 12px;border-bottom:1px solid var(--line)}
+  td{padding:9px 12px;border-bottom:1px solid rgba(29,42,54,.55);vertical-align:top;color:var(--dim)}
+  td:first-child{font-family:var(--mono);font-size:12.5px;color:var(--ink);white-space:nowrap}
+
+  /* ── callouts ── */
+  .note,.warnbox{border:1px solid var(--line);border-left:3px solid var(--accent);
+      background:var(--panel);border-radius:8px;padding:13px 18px;margin:18px 0;font-size:15px;color:var(--dim)}
+  .warnbox{border-left-color:var(--warn)}
+  .warnbox b{color:var(--warn)}
+  .note b{color:var(--accent)}
+  .keycap{font-family:var(--mono);font-size:.8em;border:1px solid var(--line);border-bottom-width:2.5px;
+      border-radius:6px;background:var(--panel2);padding:2px 8px;color:var(--ink)}
+
+  .backtotop{font-family:var(--mono);font-size:11px}
+  footer{margin-top:80px;padding-top:22px;border-top:1px solid var(--line);text-align:center;
+      font-family:var(--mono);font-size:11px;color:var(--faint);letter-spacing:.12em}
+
+  @media print{
+    :root{--bg:#fff;--panel:#f6f8fa;--panel2:#f6f8fa;--line:#ccc;--ink:#111;--dim:#444;--faint:#777;
+          --accent:#0a7c72;--accent2:#1a56b0;--warn:#9a6200}
+    body{font-size:12.5pt}
+    .toc a{color:#444}
+    pre{white-space:pre-wrap}
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+<div class="titleblock">
+  <h1>ElianBus<span class="dot">.</span></h1>
+  <div class="subtitle">The Manual</div>
+  <div class="version">Version 1.0 · Round 1</div>
+</div>
+
+<nav class="toc">
+  <div class="toctitle">Contents</div>
+  <a href="#ch1"><span class="n">1</span>Welcome to ElianBus</a>
+  <a href="#ch2"><span class="n">2</span>Quick Start</a>
+  <a href="#ch3"><span class="n">3</span>Connecting an App — The Minimum</a>
+  <a href="#ch4"><span class="n">4</span>The Envelope</a>
+  <a href="#ch5"><span class="n">5</span>Topics</a>
+  <a href="#ch6"><span class="n">6</span>The Hub Interfaces</a>
+  <a href="#ch7"><span class="n">7</span>The Log — bus.jsonl</a>
+  <a href="#ch8"><span class="n">8</span>Phone Push (ntfy)</a>
+  <a href="#ch9"><span class="n">9</span>The Web Page</a>
+  <a href="#ch10"><span class="n">10</span>Running &amp; Operations</a>
+  <a href="#ch11"><span class="n">11</span>Connected Apps Today</a>
+  <a href="#ch12"><span class="n">12</span>What ElianBus Can NOT Do (Yet)</a>
+</nav>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2 id="ch1"><span class="ch">Chapter 1</span>Welcome to ElianBus</h2>
+
+<p class="lead">ElianBus is a tiny message hub that lets every app on this Mac talk to every other app through one central point — with a complete, human-readable record of all traffic on disk.</p>
+
+<p>Think of it as a post office with a photocopier. Every app drops its letters at the same counter. The clerk photocopies each letter into a bound ledger <em>first</em>, then hands copies to everyone who asked for that kind of mail — and, if you have marked that kind of letter as important, also texts a copy to your phone.</p>
+
+<p>Apps <strong>never talk to each other directly</strong>. NetworkDashboard does not know ElianCron exists; your phone does not know NetworkDashboard exists. Each of them knows exactly one address: <code>127.0.0.1:9900</code>. Connect a new app once, and it can immediately hear — and be heard by — everything else, including apps that will not be written for another year.</p>
+
+<h3>1.1 — The Three Guarantees</h3>
+<ul>
+  <li><strong>Log-first.</strong> Every message is appended to <code>bus.jsonl</code> <em>before</em> anyone is notified. If it's not in the log, it didn't happen. The log is the source of truth, not a side effect.</li>
+  <li><strong>One shape, forever.</strong> Every message is the same four-field envelope (<a href="#ch4">Chapter 4</a>). No app ever needs to learn another app's format.</li>
+  <li><strong>Humans are first-class.</strong> A message you type by hand flows through the same log, the same fan-out, and the same phone filter as any machine message. Nothing is special-cased.</li>
+</ul>
+
+<h3>1.2 — The Shape of the System</h3>
+<pre class="diagram">
+ NetworkDashboard ──publish──▶ ┌───────────────────┐
+ ElianCron (round 2) ◀──WS──▶  │      ElianBus      │──▶ bus.jsonl   (everything, forever)
+ any future app ──────────▶    │  127.0.0.1:9900    │──▶ WS subscribers (live fan-out)
+ you (curl / web page) ───▶    └───────────────────┘──▶ ntfy ──▶ 📲 your phone (ticked topics)
+</pre>
+
+<p>The hub itself is deliberately dumb: about 180 lines of boring Node.js. It logs, it fans out, it forwards. All intelligence stays in the apps. There is no database, no broker, no framework — one file, one dependency (<code>ws</code>), one port.</p>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2 id="ch2"><span class="ch">Chapter 2</span>Quick Start</h2>
+
+<p>The hub is already installed as a LaunchAgent and starts at login. Five minutes, five steps:</p>
+
+<h3>2.1 — See it breathe</h3>
+<pre><code>curl -s localhost:9900/topics</code></pre>
+<p>A JSON list of every topic ever seen. If this answers, the bus is alive.</p>
+
+<h3>2.2 — Open the control room</h3>
+<p>Open <a href="http://localhost:9900">http://localhost:9900</a>. Live feed at the center, phone-push picker above it, inject form at the bottom.</p>
+
+<h3>2.3 — Publish your first message</h3>
+<pre><code>curl -d '{"from":"human","topic":"test/hello","data":{"msg":"my first message"}}' \
+     localhost:9900/pub</code></pre>
+<p>Watch it appear in the live feed the same instant, and in the ledger:</p>
+<pre><code>tail -1 bus.jsonl</code></pre>
+
+<h3>2.4 — Wire up your phone</h3>
+<ol>
+  <li>Install the <strong>ntfy</strong> app (Play Store / F-Droid) on your phone.</li>
+  <li>On the web page, press <span class="keycap">Generate</span> — this creates a long secret topic name.</li>
+  <li>In the ntfy app: <em>Subscribe to topic</em> → paste that name.</li>
+  <li>Flip the switch on, press <span class="keycap">Send test</span>. Your phone buzzes.</li>
+</ol>
+
+<h3>2.5 — Choose what reaches you</h3>
+<p>In the <em>Topics</em> card, tick <code>📲 phone</code> next to each topic you want forwarded. <code>network/intruder</code> and <code>system/warning</code> are ticked by default. Everything else stays on the Mac unless you say otherwise.</p>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2 id="ch3"><span class="ch">Chapter 3</span>Connecting an App — The Minimum</h2>
+
+<p class="lead">The entire integration contract is: <strong>send one HTTP POST</strong>. If your app can run <code>curl</code>, it is already compatible.</p>
+
+<h3>3.1 — Level 1: Speak (one line, any language)</h3>
+<p>This is the minimum. One fire-and-forget POST wherever something notable happens:</p>
+<pre><code><span class="c"># shell — the whole adapter</span>
+curl -s --max-time 2 -d '{"from":"my-app","topic":"my-app/event","data":{"msg":"it happened"}}' \
+     localhost:9900/pub >/dev/null 2>&amp;1 &amp;</code></pre>
+<pre><code><span class="c"># python</span>
+import urllib.request, json
+def bus(topic, msg):
+    try:
+        req = urllib.request.Request("http://127.0.0.1:9900/pub",
+            json.dumps({"from":"my-app","topic":topic,"data":{"msg":msg}}).encode())
+        urllib.request.urlopen(req, timeout=2)
+    except Exception: pass   <span class="c"># hub down = shrug, never crash the app</span></code></pre>
+<pre><code><span class="c">// node</span>
+fetch("http://127.0.0.1:9900/pub", { method:"POST",
+  body: JSON.stringify({ from:"my-app", topic:"my-app/event", data:{ msg:"it happened" } })
+}).catch(()=>{});</code></pre>
+<div class="note"><b>House rule:</b> publishing must never block or crash the caller. Short timeout, swallow errors, background it. The bus is an observer of your app, not a dependency. (NetworkDashboard's <code>bus-pub.sh</code> is the reference implementation.)</div>
+
+<h3>3.2 — Level 2: Listen (one WebSocket)</h3>
+<p>To <em>react</em> to other apps, hold a WebSocket open and say which topics you care about:</p>
+<pre><code><span class="c">// node — a complete subscriber</span>
+const WebSocket = require("ws");
+const ws = new WebSocket("ws://127.0.0.1:9900/ws");
+ws.on("open", () => ws.send(JSON.stringify({ type:"sub", topics:["presence/*"] })));
+ws.on("message", line => {
+  const e = JSON.parse(line);          <span class="c">// {ts, from, topic, data}</span>
+  console.log(e.topic, e.data.msg);
+});</code></pre>
+<p>Reconnect on close (a 2-second retry loop is plenty), and on reconnect call <code>/replay?since=&lt;last ts you saw&gt;</code> to catch up on anything you missed — the log remembers so your app doesn't have to.</p>
+
+<h3>3.3 — Level 3: Converse</h3>
+<p>Full participation is just both halves at once: subscribe to command topics (<code>my-app/run</code>), publish result topics (<code>my-app/done</code>). This is exactly what the round-2 ElianCron adapter does with <code>cron/run</code> → <code>job/completed</code>.</p>
+
+<table>
+  <tr><th>Level</th><th>Effort</th><th>Your app can…</th></tr>
+  <tr><td>1 · Speak</td><td>1 line</td><td>be seen: log, live feed, phone push</td></tr>
+  <tr><td>2 · Listen</td><td>~10 lines</td><td>react to any other app's events</td></tr>
+  <tr><td>3 · Converse</td><td>~25 lines</td><td>be driven by the bus and report back</td></tr>
+</table>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2 id="ch4"><span class="ch">Chapter 4</span>The Envelope</h2>
+
+<p>Every message on the bus — machine or human — is this one JSON shape:</p>
+<pre><code>{
+  "ts":    "2026-07-16T01:00:00.000Z",   <span class="c">// stamped by the hub if you omit it</span>
+  "from":  "network-dashboard",          <span class="c">// REQUIRED — who is speaking ("human" for you)</span>
+  "topic": "presence/arrival",           <span class="c">// REQUIRED — what this is about, a/b/c path</span>
+  "data":  { "msg": "Phone is home" }    <span class="c">// anything; defaults to {}</span>
+}</code></pre>
+
+<table>
+  <tr><th>Field</th><th>Rules</th></tr>
+  <tr><td>ts</td><td>ISO-8601. Omit it — the hub stamps arrival time. Replay's <code>since=</code> compares against this.</td></tr>
+  <tr><td>from</td><td>Non-empty string. Your app's stable name, kebab-case. Hand-injected messages use <code>human</code>.</td></tr>
+  <tr><td>topic</td><td>Non-empty string, slash-separated path. Missing/empty → the hub rejects with 400.</td></tr>
+  <tr><td>data</td><td>Any JSON. Two soft conventions: <code>data.msg</code> = human-readable one-liner (used as the phone-push body and the feed display), <code>data.title</code> = optional push title.</td></tr>
+</table>
+
+<div class="note"><b>Write the msg for a human.</b> Whatever ends up in <code>data.msg</code> is what future-you reads in the feed, the log, and on your phone's lock screen. "Phone is home" beats <code>{"idk":"mac:f8:…","n":0}</code>.</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2 id="ch5"><span class="ch">Chapter 5</span>Topics</h2>
+
+<p>Topics are labeled channels. They are not declared anywhere — the first publish on a topic brings it into existence, and it automatically appears on the web page with its own phone checkbox.</p>
+
+<h3>5.1 — Current Conventions</h3>
+<table>
+  <tr><th>Topic</th><th>Publisher</th><th>Meaning</th></tr>
+  <tr><td>presence/arrival</td><td>network-dashboard</td><td>a trusted device came online</td></tr>
+  <tr><td>presence/departure</td><td>network-dashboard</td><td>a trusted device left</td></tr>
+  <tr><td>network/intruder</td><td>network-dashboard</td><td>unknown device on the Wi-Fi</td></tr>
+  <tr><td>automation/fired</td><td>network-dashboard</td><td>an automation rule ran (ok / ERR)</td></tr>
+  <tr><td>system/warning</td><td>anyone</td><td>something broke and needs a human</td></tr>
+  <tr><td>bus/test</td><td>hub</td><td>test pushes from the Send-test button</td></tr>
+  <tr><td>job/completed · job/failed</td><td>eliancron</td><td><em>reserved for round 2</em></td></tr>
+  <tr><td>cron/run</td><td>anyone</td><td><em>reserved for round 2</em> — ask ElianCron to run a job</td></tr>
+</table>
+
+<h3>5.2 — Wildcards</h3>
+<p>Subscriptions, replay filters, and phone-forward rules all use the same matcher:</p>
+<table>
+  <tr><th>Pattern</th><th>Matches</th></tr>
+  <tr><td>presence/arrival</td><td>exactly that topic</td></tr>
+  <tr><td>presence/*</td><td><code>presence/arrival</code>, <code>presence/departure</code>, and anything deeper (<code>presence/a/b</code>)</td></tr>
+  <tr><td># &nbsp;or&nbsp; *</td><td>everything</td></tr>
+</table>
+<p>The wildcard is <em>trailing only</em> — <code>*/arrival</code> is not a pattern, it's a literal topic name that will never match anything.</p>
+
+<h3>5.3 — Naming Guidance</h3>
+<ul>
+  <li>First segment = domain (<code>presence</code>, <code>network</code>, <code>job</code>), second = event, lowercase.</li>
+  <li>Name events in the past tense for facts (<code>job/completed</code>), imperative for commands (<code>cron/run</code>).</li>
+  <li><code>network/*</code> and <code>system/*</code> are pushed to the phone at <strong>high priority</strong> — reserve them for things worth a loud buzz.</li>
+</ul>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2 id="ch6"><span class="ch">Chapter 6</span>The Hub Interfaces</h2>
+
+<h3>6.1 — HTTP Endpoints</h3>
+<table>
+  <tr><th>Endpoint</th><th>Method</th><th>Function</th></tr>
+  <tr><td>/pub</td><td>POST</td><td>Publish one envelope. Returns <code>{"ok":true}</code> or 400 with a reason. Body limit 1&nbsp;MB.</td></tr>
+  <tr><td>/replay</td><td>GET</td><td>Read the log back. Params: <code>topic</code> (wildcard, default <code>#</code>), <code>since</code> (ISO ts, inclusive), <code>limit</code> (last N).</td></tr>
+  <tr><td>/topics</td><td>GET</td><td>Every distinct topic ever seen (seeded from the log at boot).</td></tr>
+  <tr><td>/config</td><td>GET / POST</td><td>Read or partially update <code>bus-config.json</code>. POST merges: send only <code>{"forward":{"x/y":true}}</code> to change one rule.</td></tr>
+  <tr><td>/test-push</td><td>POST</td><td>Send a test message to the phone, ignoring forward rules (still requires push enabled + a topic set).</td></tr>
+  <tr><td>/</td><td>GET</td><td>The web page.</td></tr>
+  <tr><td>/manual</td><td>GET</td><td>This document.</td></tr>
+</table>
+
+<h3>6.2 — WebSocket Protocol (ws://127.0.0.1:9900/ws)</h3>
+<p>Frames you send:</p>
+<pre><code>{"type":"sub", "topics":["presence/*", "job/*"]}   <span class="c">// replaces your subscription list</span>
+{"type":"pub", "from":"my-app", "topic":"a/b", "data":{...}}</code></pre>
+<p>Frames you receive: raw envelope lines, exactly as written to the log. Until you send a <code>sub</code> frame you receive <strong>everything</strong> (<code>#</code>) — convenient for dashboards, noisy for adapters, so subscribe early.</p>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2 id="ch7"><span class="ch">Chapter 7</span>The Log — bus.jsonl</h2>
+
+<p><code>bus.jsonl</code> is an append-only text file, one JSON envelope per line, in arrival order. It is written <em>before</em> fan-out and <em>before</em> the phone forward — the ledger never lies by omission.</p>
+
+<pre><code><span class="c"># watch the whole ecosystem live</span>
+tail -f bus.jsonl
+
+<span class="c"># everything that happened today about presence</span>
+curl -s 'localhost:9900/replay?topic=presence/*&amp;since=2026-07-17T00:00:00'
+
+<span class="c"># count messages per topic (jq)</span>
+jq -r .topic bus.jsonl | sort | uniq -c | sort -rn</code></pre>
+
+<p>Because the log is the source of truth, a subscriber that was offline hasn't lost anything — it reconnects, replays since its last seen <code>ts</code>, and is whole again. Apps can be restarted fearlessly.</p>
+
+<div class="warnbox"><b>The log grows forever.</b> There is no rotation yet (see <a href="#ch12">Chapter 12</a>). At this ecosystem's message rates that's years of headroom, but if you ever bulk-publish, remember every byte is kept.</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2 id="ch8"><span class="ch">Chapter 8</span>Phone Push (ntfy)</h2>
+
+<p>The hub's only outward-facing feature. After logging and fan-out, each message is checked against your forward rules; matches are POSTed to <a href="https://ntfy.sh">ntfy.sh</a>, which delivers them to the ntfy app on your phone — <strong>anywhere in the world</strong>, mobile data included. The phone does not need to be on your network. If it's briefly offline, ntfy holds messages ~12 hours.</p>
+
+<h3>8.1 — Configuration (bus-config.json)</h3>
+<pre><code>{
+  "ntfy":    { "enabled": true, "server": "https://ntfy.sh", "topic": "elian-x7k2…" },
+  "forward": { "network/intruder": true, "system/warning": true, "presence/*": false }
+}</code></pre>
+<p>Forward keys accept the same trailing wildcards as subscriptions. Edit from the web page, via <code>POST /config</code>, or by hand — the file is re-read on every message, so changes are instant, no restart.</p>
+
+<h3>8.2 — Priorities</h3>
+<table>
+  <tr><th>Topic family</th><th>Priority</th><th>Phone behaviour</th></tr>
+  <tr><td>network/* · system/*</td><td>4 (high)</td><td>loud, bypasses some quiet settings, ⚠️ tag</td></tr>
+  <tr><td>everything else</td><td>3 (default)</td><td>normal notification, 📨 tag</td></tr>
+</table>
+
+<h3>8.3 — Privacy, Honestly</h3>
+<ul>
+  <li>Messages transit the public ntfy.sh server, cached ~12&nbsp;h, then deleted. No account exists; the <strong>topic name is the only secret</strong>. That is why <span class="keycap">Generate</span> makes a long random one. Don't share it, don't reuse it elsewhere.</li>
+  <li>Content is low-sensitivity by design ("Phone is home", a MAC address) — but it <em>is</em> your home's rhythm. If that ever feels like too much, self-host: run <code>ntfy serve</code> in Docker, change the server field, done. Same app, zero cloud.</li>
+  <li>Free-tier rate limits (hundreds of messages/day) are far above this ecosystem's traffic.</li>
+</ul>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2 id="ch9"><span class="ch">Chapter 9</span>The Web Page</h2>
+
+<p><a href="http://localhost:9900">http://localhost:9900</a> — the human window onto the bus.</p>
+<table>
+  <tr><th>Card</th><th>Function</th></tr>
+  <tr><td>📲 Phone push</td><td>Master switch, secret topic (+ Generate), server field, Send test, setup hint with your subscribe link.</td></tr>
+  <tr><td>Topics</td><td>Every topic ever seen, live message counts, and the <code>📲 phone</code> checkbox per topic — this is where you choose what reaches your pocket.</td></tr>
+  <tr><td>Live feed</td><td>The last ~100 envelopes plus everything new, newest first. Timestamp · sender · topic · msg.</td></tr>
+  <tr><td>Inject</td><td>Publish by hand as <code>from:"human"</code>. Data field takes JSON or plain text (plain text becomes <code>{"msg": …}</code>). Flows through log, fan-out, and push like any machine message.</td></tr>
+</table>
+<p>The connection pill (top right) shows <span style="color:var(--good)">● live</span> when the page's own WebSocket is up; it reconnects automatically.</p>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2 id="ch10"><span class="ch">Chapter 10</span>Running &amp; Operations</h2>
+
+<table>
+  <tr><th>Task</th><th>How</th></tr>
+  <tr><td>Always-on</td><td>LaunchAgent <code>com.elian.elianbus</code> — starts at login, respawns on crash. Already installed.</td></tr>
+  <tr><td>Restart</td><td><code>launchctl kickstart -k gui/$UID/com.elian.elianbus</code></td></tr>
+  <tr><td>Manual run</td><td>Double-click <code>Start.command</code> (installs <code>ws</code> on first run, runs in foreground).</td></tr>
+  <tr><td>Hub output</td><td><code>hub.log</code> in the project folder (startup line, ntfy failures).</td></tr>
+  <tr><td>Health check</td><td><code>curl -s localhost:9900/topics</code> — any JSON answer = alive.</td></tr>
+  <tr><td>Port conflict</td><td>The hub exits with a clear FATAL if 9900 is taken; the LaunchAgent will keep retrying, so free the port.</td></tr>
+</table>
+<p>Files, all in <code>~/elianAI/ElianBus/</code>: <code>hub.js</code> (the whole hub) · <code>index.html</code> (web page) · <code>manual.html</code> (this) · <code>bus.jsonl</code> (the ledger) · <code>bus-config.json</code> (push settings) · <code>hub.log</code>.</p>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2 id="ch11"><span class="ch">Chapter 11</span>Connected Apps Today</h2>
+
+<h3>11.1 — NetworkDashboard (live)</h3>
+<p>Publishes through its <code>bus-pub.sh</code> (2-second cap, backgrounded, silent when the hub is down — detection loops can never stall on the bus). Hooked at every gated announce site, so everything is already de-duplicated and cooldown-gated upstream:</p>
+<table>
+  <tr><th>Event</th><th>Topic</th></tr>
+  <tr><td>trusted device arrives (poll or instant/turbo path)</td><td>presence/arrival</td></tr>
+  <tr><td>trusted device leaves</td><td>presence/departure</td></tr>
+  <tr><td>unknown device appears (sniffer or scan)</td><td>network/intruder</td></tr>
+  <tr><td>automation rule fires</td><td>automation/fired</td></tr>
+  <tr><td>presence listener cannot run</td><td>system/warning</td></tr>
+</table>
+
+<h3>11.2 — ElianCronBeta (round 2, planned)</h3>
+<p>A WebSocket adapter in the Electron main process: subscribes to <code>cron/run</code> → calls <code>engine.runNow(jobId)</code>; publishes <code>job/completed</code> / <code>job/failed</code> from the job-finish hook. The source has been mapped; the work is scoped and waiting for the word.</p>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2 id="ch12"><span class="ch">Chapter 12</span>What ElianBus Can NOT Do (Yet)</h2>
+
+<p class="lead">Read this chapter before trusting the bus with something important. Every limit below is a deliberate round-1 trade-off, not an accident — and each has a stated workaround or a planned fix.</p>
+
+<table>
+  <tr><th>Limit</th><th>What it means in practice</th></tr>
+  <tr><td>No delivery guarantees</td><td>Fan-out is fire-and-forget. A subscriber that is offline misses live messages; nothing is queued per-client, there are no ACKs, no redelivery. <em>Workaround:</em> on reconnect, call <code>/replay?since=…</code> — the log is the queue.</td></tr>
+  <tr><td>No request/response</td><td>Pure pub/sub. You cannot "call" an app and await its answer; you publish a command topic and separately subscribe to its result topic. Correlate by putting an id in <code>data</code>.</td></tr>
+  <tr><td>No auth, no TLS</td><td>Anything running on this Mac (any user process) can publish, subscribe, and read/change the push config. Localhost-only binding is the entire security model. Fine for a personal machine; do not port-forward 9900.</td></tr>
+  <tr><td>Localhost only</td><td>Other devices on the LAN cannot reach the bus. The ONLY off-Mac output is the one-way ntfy push. (A LAN/remote story would need auth first.)</td></tr>
+  <tr><td>No log rotation</td><td><code>bus.jsonl</code> grows forever, and <code>/replay</code> reads the whole file into memory. Years of headroom at current rates, but a bulk publisher would bloat both. SQLite/rotation is the planned fix if it ever hurts.</td></tr>
+  <tr><td>No schema validation</td><td>The hub checks <code>from</code> + <code>topic</code> exist and the body parses — nothing else. A publisher sending garbage <code>data</code> ships garbage to every subscriber. Conventions (Chapter 4) are enforced by discipline, not code.</td></tr>
+  <tr><td>No dedup / rate limiting</td><td>The hub forwards every message it accepts. A flapping publisher = a buzzing phone. Today all publishers gate themselves (cooldowns, alerted-macs); a new app must do the same.</td></tr>
+  <tr><td>Push has no retry queue</td><td>The ntfy forward is one attempt with an 8-second cap. Mac offline → that push is gone (the message itself is still logged and fanned out). No batching, no digest mode either — every match is one notification.</td></tr>
+  <tr><td>Trailing wildcards only</td><td><code>presence/*</code> works; <code>*/arrival</code> or <code>a/*/c</code> do not exist.</td></tr>
+  <tr><td>Single hub, single point</td><td>If the hub is down, nothing flows (publishers shrug and drop). The LaunchAgent respawns it in seconds, and publishers are built to tolerate the gap — but there is no clustering, no failover.</td></tr>
+  <tr><td>Config changes are not events</td><td>Editing forward rules / ntfy settings is not itself published to the bus, so there's no audit trail of <em>who</em> changed <em>what</em> beyond file mtime.</td></tr>
+  <tr><td>ElianCron not wired yet</td><td><code>cron/run</code>, <code>job/completed</code>, <code>job/failed</code> are reserved names — publishing them today reaches the log and your phone, but no engine acts on them. That is round 2.</td></tr>
+</table>
+
+<footer>
+  ELIANBUS · THE MANUAL · V1.0 — <a href="/">back to the hub</a>
+</footer>
+
+</div>
+</body>
+</html>
