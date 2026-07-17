@@ -93,7 +93,9 @@ function forwardToPhone(rec, force) {
     title: String((rec.data && rec.data.title) || rec.topic),
     message: (rec.data && rec.data.msg) ? String(rec.data.msg) : JSON.stringify(rec.data),
     priority: urgent ? 4 : 3,
-    tags: [urgent ? "warning" : "incoming_envelope"],
+    // "elianbus" marks hub-sent pushes so an inbound bridge subscribed to the
+    // SAME topic (two-way chat thread) can ignore them — breaks echo loops.
+    tags: [urgent ? "warning" : "incoming_envelope", "elianbus"],
   });
   try {
     const url = new URL(cfg.ntfy.server);

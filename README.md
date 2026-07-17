@@ -73,11 +73,39 @@ operation, self-host ntfy and change the server field.
   launchctl load ~/Library/LaunchAgents/com.elian.elianbus.plist
   ```
 
+## Claude bridge (talk to Claude Code from your phone)
+
+`claude-bridge.js` turns the ntfy topic into a **two-way chat thread** and wires
+it to a persistent headless [Claude Code](https://claude.com/claude-code)
+session on this machine — long conversations from anywhere, no bot platform,
+no session timeout.
+
+- Type into the same ntfy topic your pushes arrive on. The bridge streams the
+  topic, ignores the hub's own pushes (they carry an `elianbus` tag), and
+  **routes** each message by its first word:
+
+  | You type | Goes to bus topic | Then |
+  |---|---|---|
+  | `claude <passphrase> <text>` | `claude/prompt` | runs `claude -p --resume` → reply pushed back as `claude/reply` |
+  | `cron <passphrase> <text>` | `cron/run` | (reserved — inert until the ElianCron adapter) |
+  | anything else | `phone/message` | just lands on the bus + dashboard |
+
+- Session state lives in `.claude-session.json` — full conversation context for
+  days. `claude <passphrase> !new` starts fresh; `!status` reports.
+- Protected routes require the passphrase from `claude-bridge-config.json`
+  (auto-created on first run — **change it**). Claude runs with default
+  permissions, so a hijacked topic can chat but not drive privileged tools.
+- Run it: `node claude-bridge.js`, or always-on via
+  `com.elian.elianbus.claude.plist` (same `sed` install as the hub plist above).
+- Tick 📲 on `claude/reply` in the web page so answers reach your phone.
+
 ## Files
 
 - `hub.js` — the whole hub (~180 lines). `index.html` — the human page.
+- `claude-bridge.js` — phone ⇄ bus router + headless Claude runner.
 - `bus.jsonl` — the source of truth. `bus-config.json` — ntfy + forward map.
-- `hub.log` — hub stdout/err when run via LaunchAgent.
+- `claude-bridge-config.json` — passphrase, routes, session cwd (never commit).
+- `hub.log` / `claude-bridge.log` — service output when run via LaunchAgents.
 
 ## Connected apps
 

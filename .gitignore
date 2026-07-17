@@ -3,3 +3,6 @@ bus.jsonl
 bus-config.json
 hub.log
 .DS_Store
+claude-bridge-config.json
+.claude-session.json
+claude-bridge.log
