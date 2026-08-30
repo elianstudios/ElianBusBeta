@@ -29,7 +29,17 @@ const CFG = path.join(HERE, "bus-config.json");
 
 const DEFAULT_CFG = {
   ntfy: { enabled: false, server: "https://ntfy.sh", topic: "" },
-  forward: { "network/intruder": true, "system/warning": true },
+  forward: {
+    "network/intruder": true,
+    "system/warning": true,
+    // Bot outcomes → phone. Bots publish answers under <bot>/reply and
+    // status/errors under <bot>/status; their inbound <bot>/prompt is NOT
+    // forwarded (that would echo whatever you just typed on the phone).
+    "grok/reply": true,
+    "grok/status": true,
+    "elian/reply": true,
+    "elian/status": true,
+  },
 };
 function loadCfg() {
   const c = JSON.parse(JSON.stringify(DEFAULT_CFG));

@@ -29,9 +29,18 @@ it didn't happen.* Selected topics are forwarded to the phone via
 | `system/warning` | any | something is broken and needs a human |
 | `job/completed`, `job/failed` | eliancron (round 2) | job results |
 | `cron/run` | any (round 2) | ask ElianCron to run a job |
+| `grok/prompt` | bridge / any | inbound request **to** grokbot (not pushed) |
+| `grok/reply` | grokbot | grokbot's answer → phone |
+| `grok/status` | grokbot | grokbot progress / errors → phone |
+| `elian/prompt` | bridge / any | inbound request **to** elianbot (not pushed) |
+| `elian/reply` | elianbot | elianbot's answer → phone |
+| `elian/status` | elianbot | elianbot progress / errors → phone |
 | `bus/test` | hub | test pushes |
 
-`network/*` and `system/*` push at high priority.
+`network/*` and `system/*` push at high priority. `grok/reply`, `grok/status`,
+`elian/reply` and `elian/status` are forwarded to the phone by default (see the
+`forward` map in `hub.js`); the matching `*/prompt` inbound topics are
+deliberately NOT forwarded so you don't get an echo of what you just typed.
 
 ## Ways in
 
@@ -99,10 +108,60 @@ no session timeout.
   `com.elian.elianbus.claude.plist` (same `sed` install as the hub plist above).
 - Tick 📲 on `claude/reply` in the web page so answers reach your phone.
 
+## Connecting a bot (e.g. grokbot)
+
+ElianBus doesn't run your bot — it's the pipe your bot plugs into. A bot is any
+process that (optionally) **listens** for requests on the bus and **publishes**
+its outcomes back, which the hub then forwards to your phone. `grok/*` and
+`elian/*` are wired up out of the box; copy the pattern for any other bot.
+
+**Publish an outcome** (the easy path — one shell line via the helper):
+
+```bash
+# answer → phone
+./bus-pub.sh grokbot grok/reply  "done: summarized 42 unread emails" "Grok"
+# progress / error → phone
+./bus-pub.sh grokbot grok/status "failed: upstream rate-limited, retrying" "Grok"
+# long output from stdin
+grok-run-something | ./bus-pub.sh grokbot grok/reply - "Grok"
+```
+
+or POST the envelope yourself from any language:
+
+```bash
+curl -d '{"from":"grokbot","topic":"grok/reply","data":{"title":"Grok","msg":"hi from grok"}}' localhost:9900/pub
+```
+
+`grok/reply` and `grok/status` are in the default forward map, so they reach the
+phone with **no web-page setup** beyond enabling push once and subscribing to
+your ntfy topic. (Everything is still logged to `bus.jsonl` regardless.)
+
+**Listen for requests** (optional — only if you want to *ask* grokbot things
+from the phone). Subscribe to `grok/prompt` over the WebSocket and reply on
+`grok/reply`:
+
+```js
+const WebSocket = require("ws");
+const ws = new WebSocket("ws://127.0.0.1:9900/ws");
+ws.on("open", () => ws.send(JSON.stringify({ type: "sub", topics: ["grok/prompt"] })));
+ws.on("message", async (line) => {
+  const env = JSON.parse(line);
+  const answer = await runGrok(env.data.msg);      // your bot logic
+  ws.send(JSON.stringify({ type: "pub", from: "grokbot", topic: "grok/reply",
+                           data: { title: "Grok", msg: answer } }));
+});
+```
+
+**Two-way from the phone.** The Claude bridge (below) already routes a `grok`
+keyword: typing `grok <passphrase> <text>` in your ntfy thread lands on
+`grok/prompt` for the listener above to pick up — so you get phone → grokbot →
+phone round-trips with nothing else to build on the hub side.
+
 ## Files
 
 - `hub.js` — the whole hub (~180 lines). `index.html` — the human page.
 - `claude-bridge.js` — phone ⇄ bus router + headless Claude runner.
+- `bus-pub.sh` — one-line publish helper for bots/scripts (`bus-pub.sh <from> <topic> <msg> [title]`).
 - `bus.jsonl` — the source of truth. `bus-config.json` — ntfy + forward map.
 - `claude-bridge-config.json` — passphrase, routes, session cwd (never commit).
 - `hub.log` / `claude-bridge.log` — service output when run via LaunchAgents.

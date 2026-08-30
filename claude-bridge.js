@@ -11,6 +11,7 @@
 //    loops). Each phone message is ROUTED by its first word:
 //        "claude <passphrase> <text>"  → bus topic claude/prompt
 //        "cron   <passphrase> <text>"  → bus topic cron/run
+//        "grok   <passphrase> <text>"  → bus topic grok/prompt
 //        anything else                 → bus topic phone/message
 //    Protected routes require the passphrase; failures are published to
 //    claude/rejected (visible in the log, never executed). EVERY phone message
@@ -42,6 +43,11 @@ const DEFAULT_CFG = {
   routes: {
     claude: { topic: "claude/prompt", protected: true },
     cron:   { topic: "cron/run",      protected: true },
+    // Phone → grokbot. Type "grok <passphrase> <text>" in the ntfy thread; the
+    // bridge drops it on grok/prompt, grokbot (a separate process you run)
+    // subscribes there and publishes its answer to grok/reply (forwarded back
+    // to the phone by the hub's default forward map).
+    grok:   { topic: "grok/prompt",   protected: true },
   },
   defaultTopic: "phone/message",
   sessionFile: ".claude-session.json",
