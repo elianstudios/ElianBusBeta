@@ -60,6 +60,24 @@ WebSocket `ws://127.0.0.1:9900/ws` — send
 wildcard; `#` = everything), `{"type":"pub", ...envelope}` to publish.
 Subscribers receive raw envelope lines.
 
+From a **browser page** (e.g. a local `dashboard.html`, even opened via
+`file://`) — the hub answers CORS preflight, so a plain `fetch` publishes. The
+page talks to the *bus*, never to ntfy, so it needs no topic and never changes
+when you rotate the ntfy topic:
+
+```js
+async function busPub(topic, msg, extra = {}) {
+  try {
+    await fetch("http://127.0.0.1:9900/pub", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ from: "network-dashboard", topic, data: { msg, ...extra } }),
+    });
+  } catch (e) { console.warn("bus publish failed (is the hub running?):", e); }
+}
+busPub("network/intruder", "Unknown device joined the Wi-Fi", { title: "Intruder" });
+```
+
 ## Phone push (ntfy)
 
 Open <http://localhost:9900> → **Generate** a secret topic → install the
