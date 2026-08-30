@@ -12,6 +12,7 @@
 //        "claude <passphrase> <text>"  → bus topic claude/prompt
 //        "cron   <passphrase> <text>"  → bus topic cron/run
 //        "grok   <passphrase> <text>"  → bus topic grok/prompt
+//        "elian  <passphrase> <text>"  → bus topic elian/prompt
 //        anything else                 → bus topic phone/message
 //    Protected routes require the passphrase; failures are published to
 //    claude/rejected (visible in the log, never executed). EVERY phone message
@@ -48,6 +49,10 @@ const DEFAULT_CFG = {
     // subscribes there and publishes its answer to grok/reply (forwarded back
     // to the phone by the hub's default forward map).
     grok:   { topic: "grok/prompt",   protected: true },
+    // Phone → elianbot. Mirrors grok: "elian <passphrase> <text>" lands on
+    // elian/prompt for elianbot (a separate process you run) to consume; its
+    // elian/reply / elian/status answers forward back to the phone.
+    elian:  { topic: "elian/prompt",  protected: true },
   },
   defaultTopic: "phone/message",
   sessionFile: ".claude-session.json",

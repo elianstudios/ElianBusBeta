@@ -97,6 +97,8 @@ no session timeout.
   |---|---|---|
   | `claude <passphrase> <text>` | `claude/prompt` | runs `claude -p --resume` → reply pushed back as `claude/reply` |
   | `cron <passphrase> <text>` | `cron/run` | (reserved — inert until the ElianCron adapter) |
+  | `grok <passphrase> <text>` | `grok/prompt` | consumed by grokbot (a process you run) → reply on `grok/reply` |
+  | `elian <passphrase> <text>` | `elian/prompt` | consumed by elianbot (a process you run) → reply on `elian/reply` |
   | anything else | `phone/message` | just lands on the bus + dashboard |
 
 - Session state lives in `.claude-session.json` — full conversation context for
@@ -152,10 +154,11 @@ ws.on("message", async (line) => {
 });
 ```
 
-**Two-way from the phone.** The Claude bridge (below) already routes a `grok`
-keyword: typing `grok <passphrase> <text>` in your ntfy thread lands on
-`grok/prompt` for the listener above to pick up — so you get phone → grokbot →
-phone round-trips with nothing else to build on the hub side.
+**Two-way from the phone.** The Claude bridge (below) already routes `grok` and
+`elian` keywords: typing `grok <passphrase> <text>` (or `elian <passphrase>
+<text>`) in your ntfy thread lands on `grok/prompt` (or `elian/prompt`) for the
+listener above to pick up — so you get phone → bot → phone round-trips with
+nothing else to build on the hub side.
 
 ## Files
 
