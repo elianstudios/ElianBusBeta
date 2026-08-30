@@ -186,6 +186,19 @@ const server = http.createServer((req, res) => {
     res.writeHead(code, { "Content-Type": type, "Access-Control-Allow-Origin": "*" });
     res.end(body);
   };
+  // CORS preflight: browsers send an OPTIONS before a cross-origin JSON POST
+  // (e.g. a dashboard.html opened via file:// calling /pub). Without this the
+  // preflight fails and the real POST never happens. Answer it so any local
+  // web page can publish to the bus.
+  if (req.method === "OPTIONS") {
+    res.writeHead(204, {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+      "Access-Control-Max-Age": "86400",
+    });
+    return res.end();
+  }
   if (req.method === "POST") {
     let raw = "";
     req.on("data", d => { raw += d; if (raw.length > 1e6) req.destroy(); });
