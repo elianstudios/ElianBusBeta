@@ -1,0 +1,63 @@
+name: Phone push test (ntfy)
+
+# Always-on phone notifications that DO NOT depend on your Mac.
+#
+# This runs on GitHub's servers and pushes a message straight to your ntfy
+# topic, so your phone buzzes even when your Mac is asleep or off. It's the
+# "more robust way" — the local ElianBus hub only sends while the Mac is awake
+# and running; this doesn't.
+#
+# ── One-time setup ───────────────────────────────────────────────────────────
+#  Add your ntfy topic as a repository secret so it never appears in logs:
+#    GitHub → Settings → Secrets and variables → Actions → New repository secret
+#      Name:  NTFY_TOPIC     Value: <the topic string from bus-config.json / the
+#                                    hub page at localhost:9900>
+#  Optional, only if you self-host ntfy:
+#      Name:  NTFY_SERVER    Value: https://your-ntfy.example   (default: ntfy.sh)
+#
+# ── How to fire a test ───────────────────────────────────────────────────────
+#  GitHub → Actions tab → "Phone push test (ntfy)" → Run workflow.
+#  You can do this from the GitHub mobile app too — a phone-triggered,
+#  cloud-sent push with your Mac completely out of the loop.
+
+on:
+  workflow_dispatch:
+    inputs:
+      message:
+        description: "Message to send to your phone"
+        required: false
+        default: "Test from GitHub Actions — your always-on phone push works."
+  # Uncomment to also send a daily heartbeat at 14:00 UTC:
+  # schedule:
+  #   - cron: "0 14 * * *"
+
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send ntfy push
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          NTFY_SERVER: ${{ secrets.NTFY_SERVER }}
+          MSG: ${{ github.event.inputs.message || 'Scheduled heartbeat from GitHub Actions.' }}
+        run: |
+          set -euo pipefail
+          SERVER="${NTFY_SERVER:-https://ntfy.sh}"
+          if [ -z "${NTFY_TOPIC:-}" ]; then
+            echo "::error::NTFY_TOPIC secret is not set. Add it under Settings → Secrets and variables → Actions (name: NTFY_TOPIC, value: your ntfy topic)."
+            exit 1
+          fi
+          echo "Publishing to ${SERVER}/<topic hidden> ..."
+          code=$(curl -sS -o /tmp/ntfy_resp -w "%{http_code}" \
+            -H "Title: ElianBus (cloud)" \
+            -H "Tags: elianbus,incoming_envelope" \
+            -d "${MSG}" \
+            "${SERVER}/${NTFY_TOPIC}")
+          echo "ntfy responded HTTP ${code}"
+          cat /tmp/ntfy_resp || true
+          echo
+          if [ "${code}" -lt 200 ] || [ "${code}" -ge 300 ]; then
+            echo "::error::ntfy returned HTTP ${code} — push not delivered."
+            exit 1
+          fi
+          echo "Pushed OK. Your phone will buzz if it is subscribed to that topic."
