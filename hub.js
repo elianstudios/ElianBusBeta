@@ -46,7 +46,11 @@ function loadCfg() {
   try {
     const j = JSON.parse(fs.readFileSync(CFG, "utf8"));
     if (j.ntfy) c.ntfy = { ...c.ntfy, ...j.ntfy };
-    if (j.forward) c.forward = j.forward;
+    // MERGE saved choices over the defaults (don't replace). This way built-in
+    // defaults like grok/reply, elian/reply, system/warning keep forwarding on
+    // an existing install without the user having to re-tick them; a topic the
+    // user explicitly turned off (saved as false) still wins.
+    if (j.forward) c.forward = { ...c.forward, ...j.forward };
   } catch {}
   return c;
 }
