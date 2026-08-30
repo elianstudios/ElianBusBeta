@@ -71,6 +71,37 @@ Privacy: messages transit the public ntfy.sh server, protected only by the
 secrecy of the topic name (that's why it's long and random). For fully-private
 operation, self-host ntfy and change the server field.
 
+**If Send test says "sent" but nothing arrives:** the button now reports the
+*real* result — if it fails it shows the actual reason (e.g. `ENOTFOUND`,
+`timed out reaching ntfy.sh (blocked by a firewall/VPN?)`, or an HTTP code).
+On startup the hub also probes the ntfy server (`/v1/health`) and logs
+`ntfy: reachable ✓` or a loud `ntfy: UNREACHABLE …` line (plus a
+`system/warning` on the bus). The usual culprit is the machine's own network
+blocking ntfy — a VPN, corporate firewall, DNS filter, or an ad-blocker — or
+the phone's ntfy app lacking notification permission / being battery-throttled.
+
+Default forwards (`network/intruder`, `system/warning`, `grok/reply`,
+`grok/status`, `elian/reply`, `elian/status`) are now *merged* over your saved
+`bus-config.json`, so they keep working on an existing install without
+re-ticking; a topic you explicitly switch off stays off.
+
+### Always-on push without your Mac (GitHub Actions)
+
+The local hub only sends while your Mac is awake and running. For notifications
+that don't depend on the Mac at all, this repo ships a workflow at
+`.github/workflows/phone-test.yml` that pushes to your ntfy topic **from
+GitHub's servers**:
+
+1. Add your ntfy topic as a repo secret: **Settings → Secrets and variables →
+   Actions → New repository secret**, name `NTFY_TOPIC`, value = your topic
+   (add `NTFY_SERVER` too if you self-host).
+2. **Actions → "Phone push test (ntfy)" → Run workflow** (works from the GitHub
+   mobile app) → your phone buzzes, Mac out of the loop.
+
+Uncomment the `schedule:` block in the workflow for a recurring heartbeat, or
+copy the same `curl` step into any workflow so a bot running in CI can ping your
+phone when a job finishes.
+
 ## Run
 
 - Manual: double-click `Start.command` (installs `ws` on first run), or `npm install && node hub.js`.
