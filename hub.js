@@ -259,5 +259,43 @@ server.on("error", e => {
     : "FATAL: " + e.message);
   process.exit(1);
 });
-server.listen(PORT, HOST, () =>
-  console.log(`ElianBus hub on http://${HOST}:${PORT}  (log: bus.jsonl)`));
+server.listen(PORT, HOST, () => {
+  console.log(`ElianBus hub on http://${HOST}:${PORT}  (log: bus.jsonl)`);
+  ntfySelfCheck();
+});
+
+// On boot, if phone push is enabled, verify this machine can actually REACH the
+// ntfy server (hits ntfy's /v1/health). The #1 cause of "Send test says sent but
+// nothing arrives" is the Mac's network blocking ntfy (VPN, firewall, DNS, or an
+// ad-blocker). This turns that invisible failure into a loud line in hub.log,
+// and drops a system/warning on the bus so it's visible in the dashboard too.
+function ntfySelfCheck() {
+  const cfg = loadCfg();
+  if (!cfg.ntfy.enabled) { console.log("ntfy: phone push disabled — skipping reachability check"); return; }
+  if (!cfg.ntfy.topic)   { console.log("ntfy: push enabled but no topic set — open http://" + HOST + ":" + PORT + " and Generate one"); return; }
+  let url;
+  try { url = new URL(cfg.ntfy.server); } catch { console.error("ntfy: bad server URL:", cfg.ntfy.server); return; }
+  const healthURL = new URL("/v1/health", url);
+  const lib = healthURL.protocol === "http:" ? http : https;
+  const done = (ok, detail) => {
+    if (ok) { console.log(`ntfy: reachable ✓ (${url.host})`); return; }
+    console.error(`ntfy: UNREACHABLE from this machine — ${detail}. Pushes will NOT arrive. ` +
+                  `Check VPN/firewall/DNS or a blocked ${url.host}, or self-host ntfy.`);
+    // best-effort; if ntfy is down this obviously can't push, but it still logs
+    publish({ from: "hub", topic: "system/warning",
+              data: { title: "ElianBus", msg: `Phone push can't reach ${url.host} (${detail}). Notifications are down.` } });
+  };
+  try {
+    const req = lib.request(healthURL, { method: "GET", timeout: 8000 }, r => {
+      let b = ""; r.on("data", d => (b += d));
+      r.on("end", () => {
+        let healthy = r.statusCode >= 200 && r.statusCode < 300;
+        try { if (b) healthy = healthy && JSON.parse(b).healthy !== false; } catch {}
+        done(healthy, healthy ? "" : "HTTP " + r.statusCode);
+      });
+    });
+    req.on("error", e => done(false, e.code || e.message));
+    req.on("timeout", () => { req.destroy(); done(false, "timed out"); });
+    req.end();
+  } catch (e) { done(false, e.message); }
+}
