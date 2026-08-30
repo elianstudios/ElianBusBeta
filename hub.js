@@ -142,6 +142,40 @@ function postNtfy(server, body, attempt) {
   } catch (e) { retry(e.message); }
 }
 
+// Single-shot test push that REPORTS the real outcome. Unlike the fire-and-
+// forget forwarder, "Send test" needs the truth: whether ntfy actually
+// accepted the message, or the exact failure (DNS, timeout, HTTP 4xx/5xx). The
+// old handler returned {ok:true} the instant it kicked off the send, so the
+// web page always said "Sent ✓" even when nothing left the machine.
+function testPush(cfg) {
+  const body = JSON.stringify({
+    topic: cfg.ntfy.topic,
+    title: "ElianBus",
+    message: "Test push — it works! 🎉",
+    priority: 3,
+    tags: ["bus_test", "elianbus"],
+  });
+  return new Promise(resolve => {
+    let url;
+    try { url = new URL(cfg.ntfy.server); }
+    catch (e) { return resolve({ ok: false, error: "bad server URL: " + e.message }); }
+    const req = (url.protocol === "http:" ? http : https).request(url, {
+      method: "POST", timeout: 8000,
+      headers: { "Content-Type": "application/json" },
+    }, r => {
+      let b = "";
+      r.on("data", d => (b += d));
+      r.on("end", () => {
+        if (r.statusCode >= 200 && r.statusCode < 300) resolve({ ok: true, status: r.statusCode });
+        else resolve({ ok: false, error: `ntfy responded HTTP ${r.statusCode}: ${b.slice(0, 200).trim()}` });
+      });
+    });
+    req.on("error", e => resolve({ ok: false, error: `${e.code || ""} ${e.message}`.trim() }));
+    req.on("timeout", () => { req.destroy(); resolve({ ok: false, error: `timed out reaching ${url.host} (blocked by a firewall/VPN?)` }); });
+    req.end(body);
+  });
+}
+
 const server = http.createServer((req, res) => {
   const u = new URL(req.url, "http://x");
   const send = (code, body, type = "application/json") => {
@@ -166,9 +200,12 @@ const server = http.createServer((req, res) => {
         const cfg = loadCfg();
         if (!cfg.ntfy.enabled || !cfg.ntfy.topic)
           return send(400, '{"err":"enable push and set a topic first"}');
-        forwardToPhone({ topic: "bus/test", from: "hub",
-                         data: { title: "ElianBus", msg: "Test push — it works! 🎉" } }, true);
-        return send(200, '{"ok":true}');
+        testPush(cfg).then(r => {
+          if (r.ok) { console.log("test-push: ntfy accepted (HTTP " + r.status + ")"); return send(200, '{"ok":true}'); }
+          console.error("test-push: FAILED —", r.error);
+          return send(502, JSON.stringify({ err: r.error }));
+        });
+        return;
       }
       return send(404, '{"err":"not found"}');
     });
