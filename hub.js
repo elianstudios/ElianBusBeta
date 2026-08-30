@@ -97,16 +97,39 @@ function forwardToPhone(rec, force) {
     // SAME topic (two-way chat thread) can ignore them — breaks echo loops.
     tags: [urgent ? "warning" : "incoming_envelope", "elianbus"],
   });
+  postNtfy(cfg.ntfy.server, body, 1);
+}
+
+// One ntfy POST with bounded retry+backoff. A single transient network blip or
+// a temporary ntfy 5xx/429 used to silently drop a push (the message survives
+// in bus.jsonl, but the phone never buzzed). Retries stay OFF the hot path:
+// each attempt is scheduled with setTimeout, so the log-first / fan-out flow is
+// never delayed. Client errors (4xx other than 429) are NOT retried.
+const NTFY_MAX_ATTEMPTS = 5;
+function ntfyBackoff(attempt) {           // 1s, 2s, 4s, 8s (+ jitter), capped
+  return Math.min(1000 * 2 ** (attempt - 1), 8000) + Math.floor(Math.random() * 250);
+}
+function postNtfy(server, body, attempt) {
+  const retry = reason => {
+    if (attempt >= NTFY_MAX_ATTEMPTS) { console.error(`ntfy: gave up after ${attempt} attempts (${reason})`); return; }
+    const wait = ntfyBackoff(attempt);
+    console.error(`ntfy: ${reason} — retry ${attempt + 1}/${NTFY_MAX_ATTEMPTS} in ${wait}ms`);
+    setTimeout(() => postNtfy(server, body, attempt + 1), wait);
+  };
   try {
-    const url = new URL(cfg.ntfy.server);
+    const url = new URL(server);
     const req = (url.protocol === "http:" ? http : https).request(url, {
       method: "POST", timeout: 8000,
       headers: { "Content-Type": "application/json" },
-    }, r => r.resume());
-    req.on("error", e => console.error("ntfy:", e.message));
-    req.on("timeout", () => req.destroy());
+    }, r => {
+      r.resume();                          // drain so the socket can be reused/freed
+      if (r.statusCode >= 500 || r.statusCode === 429) retry("http " + r.statusCode);
+      else if (r.statusCode >= 400) console.error("ntfy: http " + r.statusCode + " (not retrying)");
+    });
+    req.on("error", e => retry(e.message));
+    req.on("timeout", () => req.destroy(new Error("timeout")));
     req.end(body);
-  } catch (e) { console.error("ntfy:", e.message); }
+  } catch (e) { retry(e.message); }
 }
 
 const server = http.createServer((req, res) => {
